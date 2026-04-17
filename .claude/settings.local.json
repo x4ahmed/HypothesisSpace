@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -h \"import \" ./DeepLearning/E*/*.ipynb ./MachhineLearning/E*/*.ipynb ./Math4AI/E*/*.ipynb)"
+    ]
+  }
+}
