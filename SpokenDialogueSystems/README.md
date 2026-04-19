@@ -175,9 +175,74 @@ When averaging word embeddings, generic function words ("is", "more", "than") pu
 
 ---
 
+### Word2Vec vs FastText Comparison
+
+| Aspect | Word2Vec | FastText |
+|--------|----------|----------|
+| **Representation** | Single vector per word | Word = sum of character n-gram vectors |
+| **OOV words** | Cannot handle (error) | Can generate vectors for unknown words |
+| **Training speed** | Faster | Slower (more parameters) |
+| **Morphology** | Ignores word structure | Captures subword patterns |
+| **Example** | "inexpensive" → error | "inexpensive" → vector from "in", "expen", "sive" |
+
+**Key Advantage of FastText:** Can handle out-of-vocabulary (OOV) words by composing vectors from subword units. Better for morphologically rich languages, typos, and rare words.
+
+---
+
 ### Q10: Problem with FastText for User Preference Detection
 
-*[To be added when discussed]*
+**The Issue: False Similarities from Subword Overlap**
+
+While FastText handles OOV words well, it creates **spurious similarities** that confuse classifiers:
+
+1. **Character overlap ≠ Semantic similarity**: Words sharing n-grams get similar vectors even with different meanings (e.g., "indian" (food) and "indiana" (location) share "india")
+
+2. **Cross-category confusion**: FastText conflates words across preference categories (price, location, cuisine) based on superficial character matches rather than actual semantics
+
+3. **Noise from common subwords**: Frequent character sequences create "false neighbors" that don't represent true semantic relationships
+
+**For preference detection**, clean category boundaries are essential. FastText's subword approach blurs these boundaries, making it harder for classifiers to distinguish user intents accurately.
+
+---
+
+### Gensim and FastText Libraries
+
+**Gensim**: Open-source Python library for topic modeling and document similarity. Provides efficient implementations of Word2Vec, FastText, and other embedding methods.
+
+**FastText** (Facebook): Extension of Word2Vec that uses character n-grams. Key advantage: handles out-of-vocabulary words by composing vectors from subwords.
+
+---
+
+### SkipGram Implementation from Scratch (PyTorch)
+
+**Architecture:**
+```python
+class SkipGram(nn.Module):
+    def __init__(self, vocab_size, embedding_dim):
+        super(SkipGram, self).__init__()
+        self.embeddings = nn.Embedding(vocab_size, embedding_dim)  # U matrix
+        self.output_layer = nn.Linear(embedding_dim, vocab_size)     # W matrix
+```
+
+**Components:**
+| Layer | Purpose | Dimensions |
+|-------|---------|------------|
+| `nn.Embedding` | Lookup table for word vectors | (vocab_size, embedding_dim) |
+| `nn.Linear` | Projects to vocabulary space | (embedding_dim, vocab_size) |
+
+**Training Loop:**
+1. **Shuffle** training pairs (center_word, context_word)
+2. **Convert** numpy arrays to PyTorch tensors (`torch.LongTensor`)
+3. **Forward pass**: Input word index → embedding → linear projection → output logits
+4. **Loss**: Cross-entropy between predicted distribution and true context word
+5. **Backward pass**: `loss.backward()` computes gradients
+6. **Optimizer step**: `optimizer.step()` updates U and W matrices
+
+**Common Issues Fixed:**
+- `idx_pairs` must be converted to numpy array for indexing
+- Model must inherit from `nn.Module` (not plain Python class)
+- Tensors must be explicitly converted from numpy
+- Accumulate loss with `total_loss += loss.item()` for monitoring
 
 ---
 
