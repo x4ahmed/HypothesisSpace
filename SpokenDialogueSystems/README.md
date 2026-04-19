@@ -110,7 +110,32 @@ When averaging word embeddings, generic function words ("is", "more", "than") pu
 
 ### Q9: Advantage of Embeddings for Neural Networks
 
-*[To be added when discussed]*
+**Yes — embeddings and clusters provide significant advantages:**
+
+1. **Semantic Feature Representation**: Instead of raw text or one-hot vectors, the NN receives meaningful dense features that capture word relationships, enabling better generalization.
+
+2. **Clustering Captures Domain Structure**: In DSTC2, the three clusters (price levels, locations, food types) help the network recognize patterns and predict user intent (e.g., detecting budget constraints or cuisine preferences).
+
+3. **Data Efficiency**: Words not seen during training can be handled if similar words were seen — knowledge transfers from "italian" to "thai" because their vectors are close.
+
+4. **Dimensionality Reduction**: Embeddings compress thousands of vocabulary dimensions to 50-300, speeding up training and reducing overfitting.
+
+---
+
+### Word2Vec vs Classification Neural Network Training
+
+| Aspect | Word2Vec | Classification NN |
+|--------|----------|-------------------|
+| **Architecture** | Shallow (embedding + linear) | Shallow or deep (RNN, Transformer) |
+| **Training Type** | Self-supervised | Supervised |
+| **Labels** | None required (creates from context) | Human-labeled data required |
+| **Task** | Predict context words | Predict class (intent, category) |
+| **Loss Function** | Negative sampling / Softmax | Cross-entropy for classification |
+| **Output** | Word vectors | Class probabilities |
+
+**Key Difference:** Word2Vec is self-supervised — it creates training pairs from raw text (e.g., Input="apple", Target="tasty"). Classification NNs require labeled examples (e.g., Input="cheap italian food", Target="price=cheap, food=italian").
+
+**Typical Workflow:** First train Word2Vec (unsupervised) to get word vectors, then use those vectors as input features to a classification NN (supervised).
 
 ---
 
@@ -130,6 +155,23 @@ When averaging word embeddings, generic function words ("is", "more", "than") pu
 - **Higher `vector_size`**: Better quality, more memory/time
 - **Larger `window`**: Captures broader context but dilutes local patterns
 - **Skip-gram vs CBOW**: Skip-gram for small data/rare words, CBOW for large data/speed
+
+---
+
+### t-SNE Visualization
+
+**t-SNE** (t-Distributed Stochastic Neighbor Embedding) is a dimensionality reduction technique for visualizing high-dimensional data (like word embeddings) in 2D or 3D.
+
+**Purpose:** Word embeddings are 50-300 dimensions — t-SNE projects them to 2D while preserving local structure, so words with similar meanings cluster together.
+
+**Key Parameters:**
+| Parameter | Effect |
+|-----------|--------|
+| `n_components` | Output dimensions (2 or 3) |
+| `perplexity` | Number of neighbors considered (5-50) |
+| `n_iter` | Iterations for convergence |
+
+**Limitation:** Preserves local structure, not global distances. Don't use t-SNE coordinates for measuring actual similarity.
 
 ---
 
