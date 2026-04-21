@@ -246,4 +246,96 @@ class SkipGram(nn.Module):
 
 ---
 
-*Last updated: 2026-04-19*
+---
+
+### SkipGram Activation Functions Explained
+
+**Key Insight:** The custom SkipGram implementation uses **no explicit activation functions** in the forward pass. Here's why:
+
+**1. Embedding Layer (`nn.Embedding`)**
+- **No activation** — simply a lookup table
+- Maps word index → dense vector by indexing into learnable matrix $U$
+- Shape: `(vocab_size, embedding_dim)`
+
+**2. Output Layer (`nn.Linear`)**
+- **No activation** — returns raw **logits** (unnormalized scores)
+- Linear transformation: $z = v \cdot W$ (where $v$ is the embedding vector)
+- Shape: `(embedding_dim, vocab_size)`
+
+**3. Where Softmax Actually Happens**
+The "activation" is **implicit in `nn.CrossEntropyLoss`**:
+- `CrossEntropyLoss` combines `LogSoftmax` + `Negative Log-Likelihood`
+- Takes raw logits as input, applies log-softmax internally
+- This is why you must NOT apply softmax manually in `forward()`
+
+**Common Pitfall:** Applying `F.softmax()` in `forward()` then using `CrossEntropyLoss` = **double softmax**, which breaks training.
+
+---
+
+### CrossEntropyLoss: How It Determines Classes
+
+**No need to specify number of classes!**
+
+```python
+output = model(X_batch)  # shape: (batch_size, vocab_size)
+loss = criterion(output, Y_batch)  # CrossEntropyLoss infers automatically
+```
+
+PyTorch uses the **second dimension** of the output tensor as the number of classes:
+- Your `output_layer` has `vocab_size` units
+- Output shape: `(batch_size, vocab_size)`
+- `CrossEntropyLoss` treats each of the `vocab_size` logits as a separate class
+
+| Output Shape | Implied Classes |
+|--------------|-----------------|
+| `(32, 100)` | 100 classes |
+| `(32, 10000)` | 10,000 classes |
+
+The number of classes is **dynamic** — it adapts to whatever your model outputs.
+
+---
+
+### `find_most_similar` Function Explained
+
+**Purpose:** Query the trained embeddings to find words with the highest cosine similarity to a given word.
+
+```python
+def find_most_similar(word, num_similar=3):
+    if word not in word2idx:          # Check vocabulary membership
+        return []
+
+    word_idx = word2idx[word]          # Get integer index
+    word_embedding = model.embeddings.weight[word_idx]  # Extract vector from U matrix
+
+    similarities = torch.cosine_similarity(
+        word_embedding.unsqueeze(0),   # Shape: (1, embedding_dim)
+        model.embeddings.weight,       # Shape: (vocab_size, embedding_dim)
+        dim=1                          # Compare along embedding dimension
+    )                                  # Returns: (vocab_size,) similarity scores
+
+    similar_indices = torch.topk(similarities, k=num_similar + 1).indices[1:]
+    # topk(4) gets [self, word1, word2, word3]
+    # [1:] skips self-similarity (always 1.0), keeps top 3 others
+
+    similar_words = [idx2word[idx.item()] for idx in similar_indices]
+    return similar_words               # Convert indices back to strings
+```
+
+**Step-by-Step Breakdown:**
+
+| Step | Operation | Output |
+|------|-------------|--------|
+| 1 | Vocabulary lookup | Word index (int) |
+| 2 | Index into embedding matrix | Vector of shape `(embedding_dim,)` |
+| 3 | Cosine similarity vs all words | Score tensor `(vocab_size,)` |
+| 4 | Top-k selection | Indices of most similar words |
+| 5 | Index-to-word mapping | List of similar word strings |
+
+**Key Details:**
+- **Cosine similarity** measures vector alignment: $\cos(\theta) = \frac{A \cdot B}{||A|| \ ||B||}$
+- **Skip self:** The target word is always most similar to itself (similarity = 1.0), so it's excluded
+- **No output layer needed:** Similarity is computed directly on the embedding matrix $U$, not the output layer $W$
+
+---
+
+*Last updated: 2026-04-21*
