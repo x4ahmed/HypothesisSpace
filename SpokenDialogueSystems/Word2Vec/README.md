@@ -12,15 +12,6 @@ This document contains structured explanations for theory questions from the SDS
 
 ## Exercise 1: Word2Vec & Word Embeddings
 
-### Dataset: DSTC2
-
-**DSTC2** (Dialog State Tracking Challenge 2) is a benchmark dataset of human-computer dialogues where users search for restaurants. It contains utterances with domain-specific vocabulary organized into clear semantic clusters:
-- **Food types**: italian, indian, chinese
-- **Locations**: north, south, east, west, centre
-- **Price levels**: cheap, moderate, expensive
-
----
-
 ### Q1: Two Advantages of Dense Parameterized Word Representations vs One-Hot Vectors
 
 **1. Captures Semantic Relationships**
@@ -119,6 +110,13 @@ When averaging word embeddings, generic function words ("is", "more", "than") pu
 3. **Data Efficiency**: Words not seen during training can be handled if similar words were seen — knowledge transfers from "italian" to "thai" because their vectors are close.
 
 4. **Dimensionality Reduction**: Embeddings compress thousands of vocabulary dimensions to 50-300, speeding up training and reducing overfitting.
+
+---
+### Dataset: DSTC2
+**DSTC2** (Dialog State Tracking Challenge 2) is a benchmark dataset of human-computer dialogues where users search for restaurants. It contains utterances with domain-specific vocabulary organized into clear semantic clusters:
+- **Food types**: italian, indian, chinese
+- **Locations**: north, south, east, west, centre
+- **Price levels**: cheap, moderate, expensive
 
 ---
 
